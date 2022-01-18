@@ -70,3 +70,7 @@ Ads.Google.reward()
 Ads.Google.report
     .subscribe()
 ```
+
+### TODO
+- [ ] Add test devices.
+- [ ] Script to automatically download latest Google SDK.
