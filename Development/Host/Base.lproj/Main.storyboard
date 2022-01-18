@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="19529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19519"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Host" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="aeG-R6-SZW">
+                                <rect key="frame" x="0.0" y="44" width="414" height="50"/>
+                                <color key="backgroundColor" systemColor="systemRedColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="WEW-cF-bqd"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="50" id="gjm-r4-9Z0"/>
+                                </constraints>
+                            </view>
+                            <stackView opaque="NO" contentMode="scaleToFill" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="PJF-y1-7l5">
+                                <rect key="frame" x="0.0" y="94" width="414" height="718"/>
+                                <subviews>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Gc9-4M-44o">
+                                        <rect key="frame" x="0.0" y="297" width="414" height="124"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OIP-IX-AEE">
+                                                <rect key="frame" x="126" y="0.0" width="162" height="31"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="Banner (Gad) remove"/>
+                                                <connections>
+                                                    <action selector="_bannerGadRemove:" destination="BYZ-38-t0r" eventType="touchUpInside" id="L3X-Pv-ipt"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CGU-Su-3gM">
+                                                <rect key="frame" x="133" y="31" width="148" height="31"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="Banner (Gad) show"/>
+                                                <connections>
+                                                    <action selector="_bannerGadShow:" destination="BYZ-38-t0r" eventType="touchUpInside" id="1XX-ec-V9Y"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0wm-Rp-93f">
+                                                <rect key="frame" x="150.5" y="62" width="113" height="31"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="Reward (Gad)"/>
+                                                <connections>
+                                                    <action selector="_rewardGad:" destination="BYZ-38-t0r" eventType="touchUpInside" id="aZI-D3-aDo"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7Sd-Q1-wWE">
+                                                <rect key="frame" x="143" y="93" width="128.5" height="31"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="Interstitial (Gad)"/>
+                                                <connections>
+                                                    <action selector="_interstitialGad:" destination="BYZ-38-t0r" eventType="touchUpInside" id="hRu-Iu-NTw"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="2Bx-cp-FUz">
+                                <rect key="frame" x="0.0" y="812" width="414" height="50"/>
+                                <color key="backgroundColor" systemColor="systemRedColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="D6Y-y0-o8b"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="2Bx-cp-FUz" secondAttribute="trailing" id="1AO-Gh-5cX"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="PJF-y1-7l5" secondAttribute="trailing" id="D7R-zd-Zu1"/>
+                            <constraint firstItem="2Bx-cp-FUz" firstAttribute="top" secondItem="PJF-y1-7l5" secondAttribute="bottom" id="DZU-Ks-Cj7"/>
+                            <constraint firstItem="aeG-R6-SZW" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="Khv-3j-1pu"/>
+                            <constraint firstItem="PJF-y1-7l5" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="MkE-m3-0kx"/>
+                            <constraint firstItem="aeG-R6-SZW" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="Niu-kT-AHZ"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="2Bx-cp-FUz" secondAttribute="bottom" id="ULQ-o6-77L"/>
+                            <constraint firstItem="PJF-y1-7l5" firstAttribute="top" secondItem="aeG-R6-SZW" secondAttribute="bottom" id="Xbz-hs-Xpd"/>
+                            <constraint firstItem="2Bx-cp-FUz" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="btP-uO-sLr"/>
+                            <constraint firstItem="aeG-R6-SZW" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="c5H-ys-y36"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="139" y="138"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemRedColor">
+            <color red="1" green="0.23137254901960785" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>
