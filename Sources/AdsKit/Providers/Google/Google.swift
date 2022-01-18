@@ -103,7 +103,11 @@ public extension Ads {
             return Bundle.main.object(forInfoDictionaryKey: Self.AUTOLOADED_KEY) as? Bool ?? true
         }
         
-        public static func load() {
+        internal static func load() {
+            guard Self.shared.banner != nil else {
+                return
+            }
+            
             return Self.banner(.show)
         }
         
