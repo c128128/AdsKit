@@ -24,7 +24,7 @@ let package = Package(
             name: "AdsKit",
             dependencies: [
                 .product(name: "GoogleAppMeasurement", package: "GoogleAppMeasurement", condition: .when(platforms: [.iOS, .macOS, .tvOS])),
-                
+                // We are not sure that products did Google linked from GoogleUtilities, so we link them all.
                 .product(name: "GULAppDelegateSwizzler", package: "GoogleUtilities"),
                 .product(name: "GULEnvironment", package: "GoogleUtilities"),
                 .product(name: "GULLogger", package: "GoogleUtilities"),

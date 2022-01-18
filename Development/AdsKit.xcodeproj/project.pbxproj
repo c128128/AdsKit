@@ -12,6 +12,7 @@
 		0AAF2B6024ADF22C0084DD61 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AAF2B5E24ADF22C0084DD61 /* Main.storyboard */; };
 		0AAF2B6224ADF22D0084DD61 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0AAF2B6124ADF22D0084DD61 /* Assets.xcassets */; };
 		0AAF2B6524ADF22D0084DD61 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AAF2B6324ADF22D0084DD61 /* LaunchScreen.storyboard */; };
+		84834F4B2797232C0090C45B /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 84834F4A2797232C0090C45B /* FirebaseCrashlytics */; };
 		84B4CDFB253713B000CA374C /* Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 84B4CDF9253713B000CA374C /* Shared.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		84B4CDFE253713B000CA374C /* Shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84B4CDF7253713B000CA374C /* Shared.framework */; };
 		84B4CDFF253713B000CA374C /* Shared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 84B4CDF7253713B000CA374C /* Shared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -89,6 +90,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				84B4CE18253713D600CA374C /* AdsKit in Frameworks */,
+				84834F4B2797232C0090C45B /* FirebaseCrashlytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +217,7 @@
 			name = Shared;
 			packageProductDependencies = (
 				84B4CE17253713D600CA374C /* AdsKit */,
+				84834F4A2797232C0090C45B /* FirebaseCrashlytics */,
 			);
 			productName = Shared;
 			productReference = 84B4CDF7253713B000CA374C /* Shared.framework */;
@@ -273,6 +276,7 @@
 			);
 			mainGroup = 0AAF2B3D24ADF1F90084DD61;
 			packageReferences = (
+				84834F492797232C0090C45B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			productRefGroup = 0AAF2B4824ADF1F90084DD61 /* Products */;
 			projectDirPath = "";
@@ -727,7 +731,23 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		84834F492797232C0090C45B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		84834F4A2797232C0090C45B /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 84834F492797232C0090C45B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
 		84B4CE17253713D600CA374C /* AdsKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AdsKit;
