@@ -23,10 +23,9 @@ extension Ads.Google {
             let window = Window.make()
             let delegate = InterstitialDelegate()
             
-            window.isHidden = false
+            window.set(hidden: false)
             
-            // swiftlint:disable:next force_unwrapping
-            return window.rootViewController!.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
+            return window.rootViewController.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
                 .take(1)
                 .flatMapLatest { _ in
                     return self._ad
@@ -57,6 +56,12 @@ extension Ads.Google {
                             ad.fullScreenContentDelegate = delegate
                         
                             return Completable.create { completable in
+                                let willDismissScreen = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adWillDismissFullScreenContent(_:)))
+                                    .take(1)
+                                    .subscribe(onNext: { _ in
+                                        window.set(hidden: true)
+                                    })
+                                
                                 let didDismissScreen = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidDismissFullScreenContent(_:)))
                                     .take(1)
                                     .subscribe(onNext: { _ in
@@ -75,6 +80,8 @@ extension Ads.Google {
                                         guard let error = any[1] as? Swift.Error else {
                                             fatalError("Couldn't cast.")
                                         }
+                                        
+                                        window.set(hidden: true)
 
                                         return completable(.error(error))
                                     })
@@ -87,10 +94,10 @@ extension Ads.Google {
                                     .map { _ in .impression }
                                     .subscribe(self._report)
                                 
-                                // swiftlint:disable:next force_unwrapping
-                                ad.present(fromRootViewController: window.rootViewController!)
+                                ad.present(fromRootViewController: window.rootViewController)
                                 
                                 return Disposables.create(
+                                    willDismissScreen,
                                     didDismissScreen,
                                     didFail,
                                     adDidRecordClick,
@@ -106,8 +113,6 @@ extension Ads.Google {
                 .ignoreElements()
                 .asCompletable()
                 .do(onDispose: {
-                    window.isHidden = true
-                    
                     self.preload()
                 })
         }
@@ -128,6 +133,12 @@ extension Ads.Google {
     }
 
     private final class InterstitialDelegate: NSObject, GADFullScreenContentDelegate {
+        /*
+        deinit {
+            print("*********** \(type(of: self)) => deinit()")
+        }
+        */
+        
         func ad(_ ad: GADFullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
             print(#function)
         }
