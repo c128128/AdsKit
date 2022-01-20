@@ -1,8 +1,22 @@
 # AdsKit
 
-## How to use:
-
 ### `Google Mobile Ads SDK (iOS)` version `8.13.0`, [Release Notes](https://developers.google.com/admob/ios/rel-notes), [Latest SDK](https://developers.google.com/admob/ios/download)
+
+## Installation
+## Swift Package Manager
+```swift
+...
+
+dependencies: [
+    .package(url: "https://github.com/c128128/AdsKit.git", from: "1.0.0")
+  ],
+  targets: [
+    .target(name: "MyProject", dependencies: ["AdsKit"])
+  ]
+
+...
+
+```
 
 ## Setup:
 
