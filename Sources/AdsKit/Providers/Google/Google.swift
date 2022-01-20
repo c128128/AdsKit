@@ -31,7 +31,7 @@ public extension Ads {
         
         private let bag = DisposeBag()
         
-        private let _report = PublishSubject<Report>()
+        private static let _report = PublishSubject<Report>()
         
         private var reward: Ads.Google.Reward?
         private var interstitial: Ads.Google.Interstitial?
@@ -54,7 +54,7 @@ public extension Ads {
                 
                 self.reward?.report
                     .map { .reward($0) }
-                    .subscribe(self._report)
+                    .subscribe(Self._report)
                     .disposed(by: self.bag)
             }
             
@@ -63,7 +63,7 @@ public extension Ads {
                 
                 self.interstitial?.report
                     .map { .interstitial($0) }
-                    .subscribe(self._report)
+                    .subscribe(Self._report)
                     .disposed(by: self.bag)
             }
             
@@ -72,7 +72,7 @@ public extension Ads {
                 
                 self.banner?.report
                     .map { .banner($0) }
-                    .subscribe(self._report)
+                    .subscribe(Self._report)
                     .disposed(by: self.bag)
             }
         }
@@ -112,7 +112,7 @@ public extension Ads {
         }
         
         public static var report: Observable<Report> {
-            return Self.shared._report
+            return Self._report
         }
         
         public static func reward() -> Single<Ads.Reward.Result> {
