@@ -24,6 +24,7 @@ public extension Ads {
         private static let REWARD_KEY = "GADReward"
         private static let INTERSTITIAL_KEY = "GADInterstitial"
         private static let BANNER_KEY = "GADBanner"
+        private static let TEST_DEVICES_KEY = "GADTestDevices"
         
         private static let AUTOLOADED_KEY = "GADAutoload"
         
@@ -47,6 +48,8 @@ public extension Ads {
             
             #if targetEnvironment(simulator)
             GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = [GADSimulatorID]
+            #else
+            GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = Bundle.main.object(forInfoDictionaryKey: Self.TEST_DEVICES_KEY) as? [String] ?? []
             #endif
             
             if let key = Bundle.main.object(forInfoDictionaryKey: Self.REWARD_KEY) as? String {
