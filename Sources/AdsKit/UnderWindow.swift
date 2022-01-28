@@ -125,6 +125,10 @@ public class UnderWindow {
     internal func remove(view: UIView) {
         assert(view.frame.height >= self.stackHeight)
         
+        guard self._root._stack.subviews.contains(view) else {
+            return
+        }
+        
         view.removeFromSuperview()
         
         self.stackHeight -= view.frame.height
