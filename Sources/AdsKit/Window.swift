@@ -82,6 +82,6 @@ final class Window {
 
 final class WindowRootController: UIViewController {
     override var prefersStatusBarHidden: Bool {
-        return false
+        return UIApplication.shared.isStatusBarHidden
     }
 }
