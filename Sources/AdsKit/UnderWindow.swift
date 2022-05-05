@@ -10,7 +10,7 @@ private class WindowController: UIViewController {
     */
     
     override var prefersStatusBarHidden: Bool {
-        return UIApplication.shared.isStatusBarHidden
+        return false
     }
 }
 
