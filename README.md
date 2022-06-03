@@ -46,17 +46,10 @@ Please note:
     * `GADAutoload` == `NO`, Tracking Permission will be shown before calling `Banner`, `Interstitial` or `Reward` function.
 
 ### Banner
-`Banner` automagically appear if `GADBanner` was defined in `Info.plist` with correct `adUnitID`.
+Create a `UIView` inherited from `Banner`.
 
-If `GADAutoload` == `NO`, You need to call `Ads.Google.banner(.show)` to show the banner.
+Don't forget to set the `adUnitID`.
 
-```swift
-// Hide Banner
-Ads.Google.banner(.remove)
-
-// Show Banner
-Ads.Google.banner(.show)
-```
 ### Interstitial
 `Interstitial`. After ad was shown, new ad will be preloaded automatically.
 ```swift
@@ -81,4 +74,3 @@ Ads.Google.report
 
 ### TODO
 - [ ] Add test devices.
-- [ ] Script to automatically download latest Google SDK.
