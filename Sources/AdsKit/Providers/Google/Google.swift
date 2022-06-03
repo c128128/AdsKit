@@ -215,15 +215,16 @@ public final class Banner: UIView {
     
     private func constraints(_ activate: Activate) {
         let constraints: [NSLayoutConstraint] = [
-            .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
-            .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1.0, constant: 0),
-            .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1.0, constant: 0),
-            .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0)
+            .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .top, multiplier: 1.0, constant: 0),
+            .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .left, multiplier: 1.0, constant: 0),
+            .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .right, multiplier: 1.0, constant: 0),
+            .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .bottom, multiplier: 1.0, constant: 0)
         ]
         
         switch activate {
             case .activate:
                 NSLayoutConstraint.activate(constraints)
+            
             case .deactivate:
                 NSLayoutConstraint.deactivate(constraints)
         }
