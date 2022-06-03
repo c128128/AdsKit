@@ -54,6 +54,20 @@ Don't forget to set the `adUnitID`.
 
 <img width="260" alt="Screenshot 2022-06-03 at 17 54 33" src="https://user-images.githubusercontent.com/69604865/171901932-7b859b71-dcc3-4fc5-a02c-486639f48059.png">
 
+If you want to set `Banner` only programmatically set empty string in `Ad UnitID` in the Stortboard.
+
+```swift
+
+@IBOutlet private weak var _banner: Banner!
+...
+
+// To set the Banner programmatically
+self._banner.setAdUnitID("ca-app-pub-3940256099942544/2934735716")
+
+// To remove the Banner
+self._banner.setAdUnitID(nil)
+```
+
 ### Interstitial
 `Interstitial`. After ad was shown, new ad will be preloaded automatically.
 ```swift
