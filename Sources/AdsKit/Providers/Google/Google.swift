@@ -144,27 +144,37 @@ public final class Banner: UIView {
     public override func awakeFromNib() {
         super.awakeFromNib()
         
-        self.setUp()
+        return self.setAdUnitID(self.adUnitID)
     }
     
-    public func setAdUnitID(_ key: String) {
+    public func setAdUnitID(_ key: String?) {
+        guard let key = key else {
+            self.show(.no)
+            
+            self.adapter = nil
+            
+            return
+        }
+        
         self.adUnitID = key
+        
+        guard !self.adUnitID.isEmpty else {
+            self.show(.no)
+            
+            self.adapter = nil
+            
+            return
+        }
         
         self.setUp()
     }
     
     private func setUp() {
-        if self.adapter != nil {
-            self.show(.no)
-        }
-        
         _ = Ads.tracking()
-            .andThen(.deferred {
-                #if DEBUG
-                guard !self.adUnitID.isEmpty else {
-                    fatalError("Looks like you forget to set adUnitID into Banner View or to call setAdUnitID()")
+            .andThen(.deferred { [unowned self] in
+                if self.adapter != nil {
+                    self.show(.no)
                 }
-                #endif
                 
                 self.adapter = .init(key: self.adUnitID, size: .anchored)
                 
@@ -197,14 +207,22 @@ public final class Banner: UIView {
     private func show(_ show: Show) {
         switch show {
             case .yes:
-                self.addSubview(self.adapter.banner)
+                guard let adapter = self.adapter else {
+                    return
+                }
             
-                return self.constraints(.activate)
+                self.addSubview(adapter.banner)
+            
+                return self.constraints(.activate, adapter: adapter)
             
             case .no:
-                self.adapter.banner.removeFromSuperview()
+                guard let adapter = self.adapter else {
+                    return
+                }
+            
+                adapter.banner.removeFromSuperview()
                 
-                return self.constraints(.deactivate)
+                return self.constraints(.deactivate, adapter: adapter)
         }
     }
     
@@ -213,12 +231,12 @@ public final class Banner: UIView {
         case deactivate
     }
     
-    private func constraints(_ activate: Activate) {
+    private func constraints(_ activate: Activate, adapter: Ads.Google.Banner) {
         let constraints: [NSLayoutConstraint] = [
-            .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .top, multiplier: 1.0, constant: 0),
-            .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .left, multiplier: 1.0, constant: 0),
-            .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .right, multiplier: 1.0, constant: 0),
-            .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .bottom, multiplier: 1.0, constant: 0)
+            .init(item: adapter.banner, attribute: .top, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .top, multiplier: 1.0, constant: 0),
+            .init(item: adapter.banner, attribute: .left, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .left, multiplier: 1.0, constant: 0),
+            .init(item: adapter.banner, attribute: .right, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .right, multiplier: 1.0, constant: 0),
+            .init(item: adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self.safeAreaLayoutGuide, attribute: .bottom, multiplier: 1.0, constant: 0)
         ]
         
         switch activate {

@@ -16,6 +16,10 @@ class ViewController: UIViewController {
         self._banner.setAdUnitID("ca-app-pub-3940256099942544/2934735716")
     }
     
+    @IBAction func _bannerRemove(_ sender: Any) {
+        self._banner.setAdUnitID(nil)
+    }
+    
     @IBAction func _rewardGad(_ sender: Any) {
         print(#function)
         
