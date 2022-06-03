@@ -148,15 +148,7 @@ public final class Banner: UIView {
     }
     
     public func setAdUnitID(_ key: String?) {
-        guard let key = key else {
-            self.show(.no)
-            
-            self.adapter = nil
-            
-            return
-        }
-        
-        self.adUnitID = key
+        self.adUnitID = key ?? ""
         
         guard !self.adUnitID.isEmpty else {
             self.show(.no)
@@ -173,7 +165,7 @@ public final class Banner: UIView {
         _ = Ads.tracking()
             .andThen(.deferred { [unowned self] in
                 if self.adapter != nil {
-                    self.show(.no)
+                    self.setAdUnitID(nil)
                 }
                 
                 self.adapter = .init(key: self.adUnitID, size: .anchored)
