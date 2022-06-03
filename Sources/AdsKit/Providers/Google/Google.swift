@@ -25,7 +25,7 @@ public extension Ads {
         private static let INTERSTITIAL_KEY = "GADInterstitial"
         private static let TEST_DEVICES_KEY = "GADTestDevices"
         
-        fileprivate static let shared = Google()
+        internal static let shared = Google()
         
         private let bag = DisposeBag()
         
@@ -33,7 +33,6 @@ public extension Ads {
         
         private var reward: Ads.Google.Reward?
         private var interstitial: Ads.Google.Interstitial?
-        fileprivate var banners = NSHashTable<AdsKit.Banner>.weakObjects()
         
         private init() {
             #if DEBUG
@@ -92,13 +91,12 @@ public extension Ads {
         }
         #endif
         
-        fileprivate static func add(banner: AdsKit.Banner) {
-            Self.shared.banners.add(banner)
-            
-//            Self.shared.banners.allObjects.map {
-//                $0.adapter.report
-//                    .take(until: $0.rx.deallocated)
-//            }
+        fileprivate func add(banner: AdsKit.Banner) {
+            banner.adapter.report
+                .take(until: banner.rx.deallocated)
+                .map { .banner($0) }
+                .subscribe(Self._report)
+                .disposed(by: self.bag)
         }
         
         public static var report: Observable<Report> {
@@ -141,9 +139,14 @@ public final class Banner: UIView {
     }
     
     private func setUp() {
-        Ads.tracking()
-            .debug("++++++++++++++++++++++++")
+        _ = Ads.tracking()
             .andThen(.deferred {
+                #if DEBUG
+                guard !self.adUnitID.isEmpty else {
+                    fatalError("Looks like you forget to set adUnitID into Banner View.")
+                }
+                #endif
+                
                 self.addSubview(self.adapter.banner)
                 self.adapter.banner.translatesAutoresizingMaskIntoConstraints = false
                 
@@ -154,7 +157,7 @@ public final class Banner: UIView {
                     .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0)
                 ])
                 
-                Ads.Google.add(banner: self)
+                Ads.Google.shared.add(banner: self)
                 
                 return .empty()
             })

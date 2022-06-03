@@ -12,6 +12,9 @@ public final class Ads {
         }
         
         return Single<Void>.just(Void())
+            // Workaround for ATTrackingManager.requestTrackingAuthorization
+            // Alert don't appear if request was called right after app launch.
+            // More here: https://developer.apple.com/forums/thread/690607
             .delay(.seconds(1), scheduler: MainScheduler.instance)
             .flatMap {
                 return .create { single in

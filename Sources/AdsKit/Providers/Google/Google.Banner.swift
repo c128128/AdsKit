@@ -4,12 +4,6 @@ import RxSwift
 
 extension Ads.Google {
     final class Banner {
-        /*
-        deinit {
-            print("\(type(of: self)) => deinit()")
-        }
-        */
-        
         enum Size {
             // More: https://developers.google.com/admob/ios/banner/inline-adaptive
             case inline(maxHeight: CGFloat)
@@ -90,12 +84,6 @@ extension Ads.Google {
     }
 
     private final class BannerDelegate: NSObject, GADBannerViewDelegate, GADAdSizeDelegate {
-        /*
-        deinit {
-            print("\(type(of: self)) => deinit()")
-        }
-        */
-        
         func adView(_ bannerView: GADBannerView, willChangeAdSizeTo size: GADAdSize) {
             print(#function)
         }

@@ -146,12 +146,6 @@ extension Ads.Google {
     }
 
     private final class RewardDelegate: NSObject, GADFullScreenContentDelegate {
-        /*
-        deinit {
-            print("*********** \(type(of: self)) => deinit()")
-        }
-        */
-        
         func ad(_ ad: GADFullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
             print(#function)
         }
