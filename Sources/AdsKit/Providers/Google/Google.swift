@@ -158,15 +158,15 @@ public final class Banner: UIView {
             self.show(.no)
         }
         
-        self.adapter = .init(key: self.adUnitID, size: .anchored)
-        
         _ = Ads.tracking()
             .andThen(.deferred {
                 #if DEBUG
                 guard !self.adUnitID.isEmpty else {
-                    fatalError("Looks like you forget to set adUnitID into Banner View.")
+                    fatalError("Looks like you forget to set adUnitID into Banner View or to call setAdUnitID()")
                 }
                 #endif
+                
+                self.adapter = .init(key: self.adUnitID, size: .anchored)
                 
                 self.adapter.banner.translatesAutoresizingMaskIntoConstraints = false
                 
