@@ -48,7 +48,11 @@ Please note:
 ### Banner
 Create a `UIView` inherited from `Banner`.
 
+<img width="257" alt="Screenshot 2022-06-03 at 17 53 12" src="https://user-images.githubusercontent.com/69604865/171901841-4a8230e9-526d-4579-a5b1-9032bc5558d2.png">
+
 Don't forget to set the `adUnitID`.
+
+<img width="260" alt="Screenshot 2022-06-03 at 17 54 33" src="https://user-images.githubusercontent.com/69604865/171901932-7b859b71-dcc3-4fc5-a02c-486639f48059.png">
 
 ### Interstitial
 `Interstitial`. After ad was shown, new ad will be preloaded automatically.
