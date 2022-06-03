@@ -5,44 +5,30 @@ import RxCocoa
 import AppTrackingTransparency
 import AdSupport
 
-@_cdecl("ads_kit_autoload")
-public func autoload() {
-    Ads.autoload()
-}
-
 public final class Ads {
-    private var didFinishLaunching = false
-    
-    internal static func autoload() {
-        // Wait the app to have an AppDelegate
-        _ = NotificationCenter.default.rx.notification(UIApplication.didBecomeActiveNotification)
-            .take(1)
-            .subscribe(onNext: { _ in
-                if Ads.Google.isAutoloaded() {
-                    Ads.Google.load()
-                }
-            })
-    }
-    
     private static func requestTrackingAuthorization() -> Single<Authorization> {
         guard #available(iOS 14, *) else {
             return .just(.authorized)
         }
         
-        return .create { single in
-            ATTrackingManager.requestTrackingAuthorization { status in
-                switch status {
-                    case .authorized:
-                        return single(.success(.authorized))
+        return Single<Void>.just(Void())
+            .delay(.seconds(1), scheduler: MainScheduler.instance)
+            .flatMap {
+                return .create { single in
+                    ATTrackingManager.requestTrackingAuthorization { status in
+                        switch status {
+                            case .authorized:
+                                return single(.success(.authorized))
+                            
+                            default:
+                                return single(.success(.denied))
+                        }
+                    }
                     
-                    default:
-                        return single(.success(.denied))
+                    return Disposables.create()
                 }
             }
-            
-            return Disposables.create()
-        }
-        .observe(on: MainScheduler.instance)
+            .observe(on: MainScheduler.instance)
     }
     
     /// This method is used to make sure that

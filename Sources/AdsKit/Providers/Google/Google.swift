@@ -8,8 +8,8 @@ public extension Ads {
     final class Google {
         public enum Report {
             public enum Action {
-                case click
-                case impression
+                case click(String)
+                case impression(String)
             }
             
             case banner(Action)
@@ -23,12 +23,9 @@ public extension Ads {
         
         private static let REWARD_KEY = "GADReward"
         private static let INTERSTITIAL_KEY = "GADInterstitial"
-        private static let BANNER_KEY = "GADBanner"
         private static let TEST_DEVICES_KEY = "GADTestDevices"
         
-        private static let AUTOLOADED_KEY = "GADAutoload"
-        
-        private static let shared = Google()
+        fileprivate static let shared = Google()
         
         private let bag = DisposeBag()
         
@@ -36,7 +33,7 @@ public extension Ads {
         
         private var reward: Ads.Google.Reward?
         private var interstitial: Ads.Google.Interstitial?
-        private var banner: Ads.Google.BannerUnderWindow?
+        fileprivate var banners = NSHashTable<AdsKit.Banner>.weakObjects()
         
         private init() {
             #if DEBUG
@@ -54,7 +51,7 @@ public extension Ads {
             
             if let key = Bundle.main.object(forInfoDictionaryKey: Self.REWARD_KEY) as? String {
                 self.reward = Ads.Google.Reward(key: key)
-                
+
                 self.reward?.report
                     .map { .reward($0) }
                     .subscribe(Self._report)
@@ -63,23 +60,15 @@ public extension Ads {
             
             if let key = Bundle.main.object(forInfoDictionaryKey: Self.INTERSTITIAL_KEY) as? String {
                 self.interstitial = Ads.Google.Interstitial(key: key)
-                
+
                 self.interstitial?.report
                     .map { .interstitial($0) }
                     .subscribe(Self._report)
                     .disposed(by: self.bag)
             }
-            
-            if let key = Bundle.main.object(forInfoDictionaryKey: Self.BANNER_KEY) as? String {
-                self.banner = Ads.Google.BannerUnderWindow(key: key)
-                
-                self.banner?.report
-                    .map { .banner($0) }
-                    .subscribe(Self._report)
-                    .disposed(by: self.bag)
-            }
         }
         
+        #if DEBUG
         private static func checkMinimumNecessarySettings() {
             guard Bundle.main.object(forInfoDictionaryKey: Self.APPLICATION_IDENTIFIER) != nil else {
                 fatalError("Looks like you forget to set \(Self.APPLICATION_IDENTIFIER) in Info.plist, more details here: https://developers.google.com/admob/ios/quick-start#update_your_infoplist")
@@ -101,17 +90,15 @@ public extension Ads {
                 fatalError("Looks like you forget to set \(Self.NS_USER_TRACKING_USAGE_DESCRIPTION) in Info.plist, more details here: https://developers.google.com/admob/ios/ios14#request")
             }
         }
+        #endif
         
-        internal static func isAutoloaded() -> Bool {
-            return Bundle.main.object(forInfoDictionaryKey: Self.AUTOLOADED_KEY) as? Bool ?? true
-        }
-        
-        internal static func load() {
-            guard Self.shared.banner != nil else {
-                return
-            }
+        fileprivate static func add(banner: AdsKit.Banner) {
+            Self.shared.banners.add(banner)
             
-            return Self.banner(.show)
+//            Self.shared.banners.allObjects.map {
+//                $0.adapter.report
+//                    .take(until: $0.rx.deallocated)
+//            }
         }
         
         public static var report: Observable<Report> {
@@ -122,7 +109,7 @@ public extension Ads {
             guard let reward = Self.shared.reward else {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.REWARD_KEY), with AdUnitID.")
             }
-            
+
             return Ads.tracking()
                 .andThen(.deferred {
                     return reward.show()
@@ -133,44 +120,44 @@ public extension Ads {
             guard let interstitial = Self.shared.interstitial else {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.INTERSTITIAL_KEY), with AdUnitID.")
             }
-            
+
             return Ads.tracking()
                 .andThen(.deferred {
                     return interstitial.show()
                 })
         }
-        
-        public static func banner(_ option: Option) {
-            guard let holder = Self.shared.banner else {
-                fatalError("Looks like you forget to set in Info.plist the \(Self.BANNER_KEY), with AdUnitID.")
-            }
-            
-            switch option {
-                case .show:
-                    guard !holder.isShown else {
-                        return
-                    }
-                    
-                    _ = Ads.tracking()
-                        .andThen(.deferred {
-                            holder.show()
+    }
+}
 
-                            return .empty()
-                        })
-                        .subscribe()
-                
-                case .remove:
-                    guard holder.isShown else {
-                        return
-                    }
-                
-                    holder.remove()
-            }
-        }
+public final class Banner: UIView {
+    @IBInspectable var adUnitID: String = ""
+    
+    fileprivate lazy var adapter = Ads.Google.Banner(key: self.adUnitID, size: .anchored)
+    
+    public override func awakeFromNib() {
+        super.awakeFromNib()
+        
+        self.setUp()
     }
     
-    enum Option {
-        case show
-        case remove
+    private func setUp() {
+        Ads.tracking()
+            .debug("++++++++++++++++++++++++")
+            .andThen(.deferred {
+                self.addSubview(self.adapter.banner)
+                self.adapter.banner.translatesAutoresizingMaskIntoConstraints = false
+                
+                NSLayoutConstraint.activate([
+                    .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
+                    .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1.0, constant: 0),
+                    .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1.0, constant: 0),
+                    .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0)
+                ])
+                
+                Ads.Google.add(banner: self)
+                
+                return .empty()
+            })
+            .subscribe()
     }
 }

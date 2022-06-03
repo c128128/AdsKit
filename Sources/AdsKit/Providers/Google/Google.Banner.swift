@@ -10,8 +10,16 @@ extension Ads.Google {
         }
         */
         
+        enum Size {
+            // More: https://developers.google.com/admob/ios/banner/inline-adaptive
+            case inline(maxHeight: CGFloat)
+            
+            // More: https://developers.google.com/admob/ios/banner/anchored-adaptive
+            case anchored
+        }
+        
         internal let bag = DisposeBag()
-        fileprivate let banner: GADBannerView
+        internal let banner: GADBannerView
         // swiftlint:disable:next weak_delegate
         private let delegate: BannerDelegate
         
@@ -20,13 +28,26 @@ extension Ads.Google {
             return self._report
         }
         
-        private let _status = PublishSubject<Result<Void, Swift.Error>>()
-        var status: Observable<Result<Void, Swift.Error>> {
-            return self._status
-        }
+        private func load() {
+            // swiftlint:disable:next force_unwrapping
+            let width = self.banner.rootViewController!.view.frame.inset(by: self.banner.rootViewController!.view.safeAreaInsets).width
 
-        // swiftlint:disable:next function_body_length
-        init(key: String, root: UIViewController) {
+            switch self.size {
+                case .inline(maxHeight: let maxHeight):
+                    self.banner.adSize = GADInlineAdaptiveBannerAdSizeWithWidthAndMaxHeight(width, maxHeight)
+                
+                case .anchored:
+                    self.banner.adSize = GADCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(width)
+            }
+            
+            self.banner.load(GADRequest())
+        }
+        
+        private let size: Size
+        
+        // swiftlint:disable:next force_unwrapping
+        init(key: String, size: Size, root: UIViewController = UIApplication.shared.delegate!.window!!.rootViewController!) {
+            self.size = size
             self.delegate = BannerDelegate()
             self.banner = GADBannerView()
             self.banner.adUnitID = key
@@ -34,7 +55,7 @@ extension Ads.Google {
             self.banner.adSizeDelegate = self.delegate
             self.banner.rootViewController = root
             self.banner.translatesAutoresizingMaskIntoConstraints = false
-            self.banner.isAutoloadEnabled = true
+            self.banner.isAutoloadEnabled = false
             
             if #available(iOS 13.0, *) {
                 self.banner.backgroundColor = .systemBackground
@@ -43,50 +64,28 @@ extension Ads.Google {
             }
             
             root.rx.methodInvoked(#selector(UIViewController.viewWillTransition(to:with:)))
-                .flatMap { [unowned root] any -> Observable<CGFloat> in
+                .subscribe(onNext: { [unowned self] any in
                     guard let coordinator = any[1] as? UIViewControllerTransitionCoordinator else {
                         fatalError("Couldn't cast to UIViewControllerTransitionCoordinator")
                     }
                     
-                    return .create { observable -> Disposable in
-                        coordinator.animate(alongsideTransition: nil, completion: { _ in
-                            observable.onNext(root.view.frame.width)
-                        })
-                        
-                        return Disposables.create()
-                    }
-                }
-                .startWith(root.view.frame.width)
-                .subscribe(onNext: { [unowned self] width in
-                    self.banner.adSize = GADCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(width)
-                })
-                .disposed(by: self.bag)
-            
-            self.delegate.rx.methodInvoked(#selector(BannerDelegate.bannerViewDidReceiveAd(_:)))
-                .subscribe(onNext: { [unowned self] _ in
-                    self._status.onNext(.success(Void()))
-                })
-                .disposed(by: self.bag)
-            
-            self.delegate.rx.methodInvoked(#selector(BannerDelegate.bannerView(_:didFailToReceiveAdWithError:)))
-                .subscribe(onNext: { [unowned self] any in
-                    guard let error = any[1] as? Error else {
-                        fatalError("Couldn't cast to Error")
-                    }
-                    
-                    self._status.onNext(.failure(error))
+                    coordinator.animate(alongsideTransition: nil, completion: { _ in
+                        self.load()
+                    })
                 })
                 .disposed(by: self.bag)
             
             self.delegate.rx.methodInvoked(#selector(BannerDelegate.bannerViewDidRecordClick(_:)))
-                .map { _ in .click }
+                .map { _ in .click(key) }
                 .subscribe(self._report)
                 .disposed(by: self.bag)
             
             self.delegate.rx.methodInvoked(#selector(BannerDelegate.bannerViewDidRecordImpression(_:)))
-                .map { _ in .impression }
+                .map { _ in .impression(key) }
                 .subscribe(self._report)
                 .disposed(by: self.bag)
+            
+            self.load()
         }
     }
 
@@ -127,62 +126,6 @@ extension Ads.Google {
         
         func bannerViewDidDismissScreen(_ bannerView: GADBannerView) {
             print(#function)
-        }
-    }
-
-    internal final class BannerUnderWindow {
-        /*
-        deinit {
-            print("\(type(of: self)) => deinit()")
-        }
-        */
-        
-        private let bag = DisposeBag()
-        
-        private var window: UnderWindow!
-        private var banner: Banner!
-        private let key: String
-        
-        private let _report = PublishSubject<Ads.Google.Report.Action>()
-        internal var report: Observable<Ads.Google.Report.Action> {
-            return self._report
-        }
-        
-        internal var isShown: Bool {
-            return self.banner != nil
-        }
-        
-        init(key: String) {
-            self.key = key
-        }
-        
-        func show() {
-            // swiftlint:disable:next force_unwrapping
-            self.window = UnderWindow(main: UIApplication.shared.delegate!.window!!)
-            self.banner = Banner(key: key, root: self.window.root)
-
-            self.banner.status
-                .subscribe(with: self, onNext: { _self, status in
-                    switch status {
-                        case .success:
-                            _self.window.add(view: _self.banner.banner)
-        
-                        case .failure:
-                            _self.remove()
-                    }
-                })
-                .disposed(by: self.banner.bag)
-            
-            self.banner.report
-                .subscribe(self._report)
-                .disposed(by: self.banner.bag)
-        }
-        
-        func remove() {
-            self.window.remove(view: self.banner.banner)
-            
-            self.banner = nil
-            self.window = nil
         }
     }
 }

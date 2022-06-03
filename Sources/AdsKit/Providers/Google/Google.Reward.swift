@@ -22,6 +22,7 @@ extension Ads.Google {
         func show() -> Single<Ads.Reward.Result> {
             let window = Window.make()
             let delegate = RewardDelegate()
+            let key = self.key
             
             window.set(hidden: false)
             
@@ -93,11 +94,11 @@ extension Ads.Google {
                                     })
                                 
                                 let adDidRecordClick = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidRecordClick(_:)))
-                                    .map { _ in .click }
+                                    .map { _ in .click(key) }
                                     .subscribe(self._report)
                                 
                                 let adDidRecordImpression = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidRecordImpression(_:)))
-                                    .map { _ in .impression }
+                                    .map { _ in .impression(key) }
                                     .subscribe(self._report)
                                 
                                 ad.present(fromRootViewController: window.rootViewController) {
@@ -167,7 +168,7 @@ extension Ads.Google {
             print(#function)
         }
         
-        func adDidPresentFullScreenContent(_ ad: GADFullScreenPresentingAd) {
+        func adWillPresentFullScreenContent(_ ad: GADFullScreenPresentingAd) {
             print(#function)
         }
         
