@@ -5,7 +5,23 @@ import RxCocoa
 import AppTrackingTransparency
 import AdSupport
 
+@_cdecl("ads_kit_autoload")
+public func autoload() {
+    Ads.autoload()
+}
+
 public final class Ads {
+    internal static func autoload() {
+        // Wait the app to have an AppDelegate
+        _ = NotificationCenter.default.rx.notification(UIApplication.didBecomeActiveNotification)
+            .take(1)
+            .subscribe(onNext: { _ in
+                if Ads.Google.isAutoloaded() {
+                    Ads.Google.load()
+                }
+            })
+    }
+    
     private static func requestTrackingAuthorization() -> Single<Authorization> {
         guard #available(iOS 14, *) else {
             return .just(.authorized)

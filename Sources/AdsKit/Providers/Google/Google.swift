@@ -21,6 +21,7 @@ public extension Ads {
         private static let SK_AD_NETWORK_ITEMS = "SKAdNetworkItems"
         private static let NS_USER_TRACKING_USAGE_DESCRIPTION = "NSUserTrackingUsageDescription"
         
+        private static let AUTOLOADED_KEY = "GADAutoload"
         private static let REWARD_KEY = "GADReward"
         private static let INTERSTITIAL_KEY = "GADInterstitial"
         private static let TEST_DEVICES_KEY = "GADTestDevices"
@@ -97,6 +98,14 @@ public extension Ads {
                 .map { .banner($0) }
                 .subscribe(Self._report)
                 .disposed(by: self.bag)
+        }
+        
+        internal static func isAutoloaded() -> Bool {
+            return Bundle.main.object(forInfoDictionaryKey: Self.AUTOLOADED_KEY) as? Bool ?? true
+        }
+        
+        internal static func load() {
+            _ = Self.shared
         }
         
         public static var report: Observable<Report> {

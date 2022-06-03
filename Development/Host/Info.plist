@@ -24,8 +24,6 @@
 	<string>ca-app-pub-3940256099942544~1458002512</string>
 	<key>GADAutoload</key>
 	<true/>
-	<key>GADBanner</key>
-	<string>ca-app-pub-3940256099942544/2934735716</string>
 	<key>GADInterstitial</key>
 	<string>ca-app-pub-3940256099942544/4411468910</string>
 	<key>GADReward</key>

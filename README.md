@@ -1,7 +1,5 @@
 # AdsKit
 
-### `Google Mobile Ads SDK (iOS)` version `8.13.0`, [Release Notes](https://developers.google.com/admob/ios/rel-notes), [Latest SDK](https://developers.google.com/admob/ios/download)
-
 ## Installation
 ## Swift Package Manager
 ```swift
@@ -34,10 +32,6 @@ dependencies: [
 <!-- example: Interstitial -->
 <key>GADInterstitial</key>
 <string>ca-app-pub-3940256099942544/4411468910</string>
-
-<!-- example: Banner -->
-<key>GADBanner</key>
-<string>ca-app-pub-3940256099942544/2934735716</string>
 ```
 
 ## Details:
