@@ -15,7 +15,7 @@ extension Ads.Google {
         internal let bag = DisposeBag()
         internal let banner: GADBannerView
         // swiftlint:disable:next weak_delegate
-        private let delegate: BannerDelegate
+        internal let delegate: BannerDelegate
         
         private let _report = PublishSubject<Ads.Google.Report.Action>()
         internal var report: Observable<Ads.Google.Report.Action> {
@@ -83,7 +83,7 @@ extension Ads.Google {
         }
     }
 
-    private final class BannerDelegate: NSObject, GADBannerViewDelegate, GADAdSizeDelegate {
+    internal final class BannerDelegate: NSObject, GADBannerViewDelegate, GADAdSizeDelegate {
         func adView(_ bannerView: GADBannerView, willChangeAdSizeTo size: GADAdSize) {
             print(#function)
         }

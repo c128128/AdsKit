@@ -156,15 +156,30 @@ public final class Banner: UIView {
                 }
                 #endif
                 
-                self.addSubview(self.adapter.banner)
                 self.adapter.banner.translatesAutoresizingMaskIntoConstraints = false
                 
-                NSLayoutConstraint.activate([
+                let constraints: [NSLayoutConstraint] = [
                     .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
                     .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1.0, constant: 0),
                     .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1.0, constant: 0),
                     .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0)
-                ])
+                ]
+                
+                _ = self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerViewDidReceiveAd(_:)))
+                    .take(until: self.rx.deallocated)
+                    .subscribe(onNext: { [unowned self] _ in
+                        self.addSubview(self.adapter.banner)
+
+                        NSLayoutConstraint.activate(constraints)
+                    })
+                
+                _ = self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerView(_:didFailToReceiveAdWithError:)))
+                    .take(until: self.rx.deallocated)
+                    .subscribe(onNext: { [unowned self] _ in
+                        self.adapter.banner.removeFromSuperview()
+                        
+                        NSLayoutConstraint.deactivate(constraints)
+                    })
                 
                 Ads.Google.shared.add(banner: self)
                 
