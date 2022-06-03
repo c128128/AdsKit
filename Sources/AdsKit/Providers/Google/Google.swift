@@ -139,7 +139,7 @@ public extension Ads {
 public final class Banner: UIView {
     @IBInspectable var adUnitID: String = ""
     
-    fileprivate lazy var adapter = Ads.Google.Banner(key: self.adUnitID, size: .anchored)
+    fileprivate var adapter: Ads.Google.Banner!
     
     public override func awakeFromNib() {
         super.awakeFromNib()
@@ -147,7 +147,19 @@ public final class Banner: UIView {
         self.setUp()
     }
     
+    public func setAdUnitID(_ key: String) {
+        self.adUnitID = key
+        
+        self.setUp()
+    }
+    
     private func setUp() {
+        if self.adapter != nil {
+            self.show(.no)
+        }
+        
+        self.adapter = .init(key: self.adUnitID, size: .anchored)
+        
         _ = Ads.tracking()
             .andThen(.deferred {
                 #if DEBUG
@@ -158,27 +170,16 @@ public final class Banner: UIView {
                 
                 self.adapter.banner.translatesAutoresizingMaskIntoConstraints = false
                 
-                let constraints: [NSLayoutConstraint] = [
-                    .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
-                    .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1.0, constant: 0),
-                    .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1.0, constant: 0),
-                    .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0)
-                ]
-                
                 _ = self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerViewDidReceiveAd(_:)))
                     .take(until: self.rx.deallocated)
                     .subscribe(onNext: { [unowned self] _ in
-                        self.addSubview(self.adapter.banner)
-
-                        NSLayoutConstraint.activate(constraints)
+                        self.show(.yes)
                     })
                 
                 _ = self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerView(_:didFailToReceiveAdWithError:)))
                     .take(until: self.rx.deallocated)
                     .subscribe(onNext: { [unowned self] _ in
-                        self.adapter.banner.removeFromSuperview()
-                        
-                        NSLayoutConstraint.deactivate(constraints)
+                        self.show(.no)
                     })
                 
                 Ads.Google.shared.add(banner: self)
@@ -186,5 +187,45 @@ public final class Banner: UIView {
                 return .empty()
             })
             .subscribe()
+    }
+    
+    private enum Show {
+        case yes
+        case no
+    }
+    
+    private func show(_ show: Show) {
+        switch show {
+            case .yes:
+                self.addSubview(self.adapter.banner)
+            
+                return self.constraints(.activate)
+            
+            case .no:
+                self.adapter.banner.removeFromSuperview()
+                
+                return self.constraints(.deactivate)
+        }
+    }
+    
+    private enum Activate {
+        case activate
+        case deactivate
+    }
+    
+    private func constraints(_ activate: Activate) {
+        let constraints: [NSLayoutConstraint] = [
+            .init(item: self.adapter.banner, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0),
+            .init(item: self.adapter.banner, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1.0, constant: 0),
+            .init(item: self.adapter.banner, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1.0, constant: 0),
+            .init(item: self.adapter.banner, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0)
+        ]
+        
+        switch activate {
+            case .activate:
+                NSLayoutConstraint.activate(constraints)
+            case .deactivate:
+                NSLayoutConstraint.deactivate(constraints)
+        }
     }
 }
