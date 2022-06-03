@@ -54,7 +54,7 @@ Don't forget to set the `adUnitID`.
 
 <img width="260" alt="Screenshot 2022-06-03 at 17 54 33" src="https://user-images.githubusercontent.com/69604865/171901932-7b859b71-dcc3-4fc5-a02c-486639f48059.png">
 
-If you want to set `Banner` only programmatically set empty string in `Ad UnitID` in the Stortboard.
+If you want to set `Banner` only programmatically set empty string in `Ad UnitID` in the Storyboard.
 
 ```swift
 
