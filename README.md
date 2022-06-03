@@ -6,7 +6,7 @@
 ...
 
 dependencies: [
-    .package(url: "https://github.com/c128128/AdsKit.git", from: "1.0.0")
+    .package(url: "https://github.com/c128128/AdsKit.git", from: "2.0.0")
   ],
   targets: [
     .target(name: "MyProject", dependencies: ["AdsKit"])
