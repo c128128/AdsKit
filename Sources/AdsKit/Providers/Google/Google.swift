@@ -22,6 +22,7 @@ public extension Ads {
         private static let APPLICATION_IDENTIFIER = "GADApplicationIdentifier"
         private static let SK_AD_NETWORK_ITEMS = "SKAdNetworkItems"
         private static let NS_USER_TRACKING_USAGE_DESCRIPTION = "NSUserTrackingUsageDescription"
+        private static let NS_APP_TRANSPORT_SECURITY = "NSAppTransportSecurity"
         
         private static let AUTOLOADED_KEY = "GADAutoload"
         private static let REWARD_KEY = "GADReward"
@@ -90,6 +91,10 @@ public extension Ads {
             
             guard Bundle.main.object(forInfoDictionaryKey: Self.NS_USER_TRACKING_USAGE_DESCRIPTION) != nil else {
                 fatalError("Looks like you forget to set \(Self.NS_USER_TRACKING_USAGE_DESCRIPTION) in Info.plist, more details here: https://developers.google.com/admob/ios/ios14#request")
+            }
+            
+            guard Bundle.main.object(forInfoDictionaryKey: Self.NS_APP_TRANSPORT_SECURITY) != nil else {
+                fatalError("Looks like you forget to set \(Self.NS_APP_TRANSPORT_SECURITY) in Info.plist, more details here: https://developers.google.com/admob/ios/app-transport-security")
             }
         }
         #endif

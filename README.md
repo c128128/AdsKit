@@ -20,9 +20,15 @@ dependencies: [
 
 1. Follow `Update your Info.plist` from official [`Google Mobile Ads SDK (iOS)`](https://developers.google.com/admob/ios/quick-start#update_your_infoplist)
 
-2. Follow [`Request App Tracking Transparency authorization`](https://developers.google.com/admob/ios/ios14#request)
+2. Follow [`App Transport Security`](https://developers.google.com/admob/ios/app-transport-security)
 
-3. `AdsKit` automatically reads `adUnitID` from `Info.plist` and automatically `preload()` ads if needed.
+3. Follow [`Request App Tracking Transparency authorization`](https://developers.google.com/admob/ios/ios14#request)
+
+Please note: `App Tracking Transparency Request` will be made when `Banner`, `Interstitial` or `Reward` will be first called.
+
+`AdsKit` support [`UMP`](https://developers.google.com/admob/ump/ios/quick-start) if it was configured in `Admob` UI, and will fallback to `Ads.tracking()` if `UMP` return an error.
+
+4. `AdsKit` automatically reads `adUnitID` from `Info.plist` and automatically `preload()` ads if needed.
 
 ```xml
 <!-- example: Reward -->
