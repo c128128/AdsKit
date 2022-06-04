@@ -1,8 +1,10 @@
 // swiftlint:disable nesting
 import UIKit
 import GoogleMobileAds
+import UserMessagingPlatform
 import RxRelay
 import RxSwift
+import AppTrackingTransparency
 
 public extension Ads {
     final class Google {
@@ -117,7 +119,7 @@ public extension Ads {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.REWARD_KEY), with AdUnitID.")
             }
 
-            return Ads.tracking()
+            return Ads.Google.tracking()
                 .andThen(.deferred {
                     return reward.show()
                 })
@@ -128,10 +130,64 @@ public extension Ads {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.INTERSTITIAL_KEY), with AdUnitID.")
             }
 
-            return Ads.tracking()
+            return Ads.Google.tracking()
                 .andThen(.deferred {
                     return interstitial.show()
                 })
+        }
+        
+        internal static func tracking() -> Completable {
+            guard #available(iOS 14, *) else {
+                return .empty()
+            }
+            
+            guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else {
+                return .empty()
+            }
+            
+            let ump = Completable.create { completable in
+                UMPConsentInformation.sharedInstance.requestConsentInfoUpdate(with: UMPRequestParameters()) { error in
+                    if let error = error {
+                        return completable(.error(error))
+                    }
+    
+                    switch UMPConsentInformation.sharedInstance.consentStatus {
+                        case .required:
+                            UMPConsentForm.load { form, error in
+                                if let error = error {
+                                    return completable(.error(error))
+                                }
+                                
+                                let window = Window.make()
+                                window.set(hidden: false)
+                                
+                                _ = window.rootViewController.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
+                                    .take(1)
+                                    .subscribe(onNext: { _ in
+                                        form?.present(from: window.rootViewController, completionHandler: { error in
+                                            window.set(hidden: true)
+                                            
+                                            if let error = error {
+                                                return completable(.error(error))
+                                            }
+                                            
+                                            return completable(.completed)
+                                        })
+                                    })
+                            }
+
+                        default:
+                            return completable(.completed)
+                    }
+                }
+                
+                return Disposables.create()
+            }
+            
+            return ump
+                .catch { _ in
+                    return Ads.tracking()
+                }
         }
     }
 }
@@ -162,7 +218,7 @@ public final class Banner: UIView {
     }
     
     private func setUp() {
-        _ = Ads.tracking()
+        _ = Ads.Google.tracking()
             .andThen(.deferred { [unowned self] in
                 if self.adapter != nil {
                     self.setAdUnitID(nil)

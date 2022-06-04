@@ -58,11 +58,11 @@ public final class Ads {
         }
         
         switch ATTrackingManager.trackingAuthorizationStatus {
-            case .notDetermined, .restricted:
+            case .notDetermined:
                 return Self.requestTrackingAuthorization()
                     .asCompletable()
 
-            case .denied, .authorized:
+            case .denied, .authorized, .restricted:
                 return .empty()
 
             @unknown default:

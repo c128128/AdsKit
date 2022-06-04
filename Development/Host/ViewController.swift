@@ -1,12 +1,12 @@
 import UIKit
 import AdsKit
 
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
     @IBOutlet private weak var _banner: Banner!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         _ = Ads.Google.report
             .debug("Ads.Google.report")
             .subscribe()

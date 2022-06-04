@@ -73,9 +73,6 @@
                                 <constraints>
                                     <constraint firstAttribute="height" priority="750" constant="50" id="D6Y-y0-o8b"/>
                                 </constraints>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="string" keyPath="adUnitID" value="ca-app-pub-3940256099942544/2934735716"/>
-                                </userDefinedRuntimeAttributes>
                             </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
