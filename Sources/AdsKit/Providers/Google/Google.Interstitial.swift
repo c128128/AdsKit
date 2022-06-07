@@ -12,6 +12,8 @@ extension Ads.Google {
         private let _ad = ReplaySubject<Swift.Result<GADInterstitialAd?, Swift.Error>>.create(bufferSize: 1)
         private let key: String
         
+        private var isShown = false
+        
         init(key: String) {
             self.key = key
             
@@ -20,10 +22,15 @@ extension Ads.Google {
         
         // swiftlint:disable:next function_body_length
         func show() -> Completable {
+            guard !self.isShown else {
+                return .error("Interstitial is already shown.")
+            }
+            
             let window = Window.make()
             let delegate = InterstitialDelegate()
             let key = self.key
             
+            self.isShown = true
             window.set(hidden: false)
             
             return window.rootViewController.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
@@ -114,6 +121,7 @@ extension Ads.Google {
                 .ignoreElements()
                 .asCompletable()
                 .do(onDispose: {
+                    self.isShown = false
                     self.preload()
                 })
         }

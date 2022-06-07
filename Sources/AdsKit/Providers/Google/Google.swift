@@ -301,3 +301,5 @@ public final class Banner: UIView {
         }
     }
 }
+
+extension String: Swift.Error {}
