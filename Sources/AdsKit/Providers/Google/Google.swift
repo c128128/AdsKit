@@ -209,9 +209,9 @@ public final class Banner: UIView {
     }
     
     public func setAdUnitID(_ key: String?) {
-        self.adUnitID = key ?? ""
+        let key = key ?? ""
         
-        guard !self.adUnitID.isEmpty else {
+        guard !key.isEmpty else {
             self.show(.no)
             
             self.adapter = nil
@@ -219,37 +219,38 @@ public final class Banner: UIView {
             return
         }
         
-        self.setUp()
+        return self.setUp(with: key)
     }
     
-    private func setUp() {
+    private func setUp(with key: String) {
         _ = Ads.Google.tracking()
             .andThen(.deferred { [unowned self] in
                 if self.adapter != nil {
                     self.setAdUnitID(nil)
                 }
                 
-                self.adapter = .init(key: self.adUnitID, size: .anchored)
+                self.adapter = .init(key: key, size: .anchored)
                 
                 self.adapter.banner.translatesAutoresizingMaskIntoConstraints = false
                 
-                _ = self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerViewDidReceiveAd(_:)))
-                    .take(until: self.rx.deallocated)
+                self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerViewDidReceiveAd(_:)))
                     .subscribe(onNext: { [unowned self] _ in
                         self.show(.yes)
                     })
+                    .disposed(by: self.adapter.bag)
                 
-                _ = self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerView(_:didFailToReceiveAdWithError:)))
-                    .take(until: self.rx.deallocated)
+                self.adapter.delegate.rx.methodInvoked(#selector(Ads.Google.BannerDelegate.bannerView(_:didFailToReceiveAdWithError:)))
                     .subscribe(onNext: { [unowned self] _ in
                         self.show(.no)
                     })
+                    .disposed(by: self.adapter.bag)
                 
                 Ads.Google.shared.add(banner: self)
                 
                 return .empty()
             })
             .subscribe()
+            .disposed(by: self.adapter.bag)
     }
     
     private enum Show {
