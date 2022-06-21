@@ -20,6 +20,7 @@ extension Ads.Google {
             self.preload()
         }
         
+        // swiftlint:disable:next function_body_length
         func show(from controller: UIViewController) -> Completable {
             #if DEBUG
             guard controller.viewIfLoaded?.window != nil else {
