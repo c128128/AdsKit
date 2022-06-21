@@ -1,3 +1,5 @@
+## README is outdated. Please check source code.
+
 # AdsKit
 
 ## Installation
