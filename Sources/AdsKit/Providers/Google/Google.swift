@@ -35,6 +35,8 @@ public extension Ads {
         
         private static let _report = PublishSubject<Report>()
         
+        fileprivate let tracking = Tracking()
+        
         private var reward: Ads.Google.Reward?
         private var interstitial: Ads.Google.Interstitial?
         
@@ -123,7 +125,7 @@ public extension Ads {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.REWARD_KEY), with AdUnitID.")
             }
 
-            return Ads.Google.tracking(from: root)
+            return Self.shared.tracking.request(from: root)
                 .andThen(.deferred {
                     return reward.show(from: root)
                 })
@@ -134,55 +136,10 @@ public extension Ads {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.INTERSTITIAL_KEY), with AdUnitID.")
             }
 
-            return Ads.Google.tracking(from: root)
+            return Self.shared.tracking.request(from: root)
                 .andThen(.deferred {
                     return interstitial.show(from: root)
                 })
-        }
-        
-        internal static func tracking(from controller: UIViewController) -> Completable {
-            guard #available(iOS 14, *) else {
-                return .empty()
-            }
-            
-            guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else {
-                return .empty()
-            }
-            
-            let ump = Completable.create { completable in
-                UMPConsentInformation.sharedInstance.requestConsentInfoUpdate(with: UMPRequestParameters()) { error in
-                    if let error = error {
-                        return completable(.error(error))
-                    }
-    
-                    switch UMPConsentInformation.sharedInstance.consentStatus {
-                        case .required:
-                            UMPConsentForm.load { form, error in
-                                if let error = error {
-                                    return completable(.error(error))
-                                }
-                                
-                                form?.present(from: controller, completionHandler: { error in
-                                    if let error = error {
-                                        return completable(.error(error))
-                                    }
-                                    
-                                    return completable(.completed)
-                                })
-                            }
-
-                        default:
-                            return completable(.completed)
-                    }
-                }
-                
-                return Disposables.create()
-            }
-            
-            return ump
-                .catch { _ in
-                    return Ads.tracking()
-                }
         }
     }
 }
@@ -203,7 +160,7 @@ public final class Banner: UIView {
         }
         
         // swiftlint:disable:next force_unwrapping
-        Ads.Google.tracking(from: UIApplication.shared.delegate!.window!!.rootViewController!)
+        Ads.Google.shared.tracking.request(from: UIApplication.shared.delegate!.window!!.rootViewController!)
             .andThen(.deferred { [unowned self] in
                 self.adapter = .init(key: key, size: .anchored)
                 
@@ -280,3 +237,74 @@ public final class Banner: UIView {
 }
 
 extension String: Swift.Error {}
+
+private extension Ads.Google {
+    final class Tracking {
+        private var _tracking: ReplaySubject<Void>!
+        
+        func request(from controller: UIViewController) -> Completable {
+            if let tracking = self._tracking {
+                return tracking
+                    .take(1)
+                    .ignoreElements()
+                    .asCompletable()
+            }
+
+            self._tracking = .create(bufferSize: 1)
+            
+            return Self._request(from: controller)
+                .andThen(.deferred {
+                    self._tracking.onNext(Void())
+                    
+                    return self.request(from: controller)
+                })
+        }
+        
+        private static func _request(from controller: UIViewController) -> Completable {
+            guard #available(iOS 14, *) else {
+                return .empty()
+            }
+            
+            guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else {
+                return .empty()
+            }
+            
+            let ump = Completable.create { completable in
+                UMPConsentInformation.sharedInstance.requestConsentInfoUpdate(with: UMPRequestParameters()) { error in
+                    if let error = error {
+                        return completable(.error(error))
+                    }
+    
+                    switch UMPConsentInformation.sharedInstance.consentStatus {
+                        case .required:
+                            UMPConsentForm.load { form, error in
+                                if let error = error {
+                                    return completable(.error(error))
+                                }
+                                
+                                form?.present(from: controller, completionHandler: { error in
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                        if let error = error {
+                                            return completable(.error(error))
+                                        }
+                                        
+                                        return completable(.completed)
+                                    }
+                                })
+                            }
+
+                        default:
+                            return completable(.completed)
+                    }
+                }
+                
+                return Disposables.create()
+            }
+            
+            return ump
+                .catch { _ in
+                    return Ads.tracking()
+                }
+        }
+    }
+}
