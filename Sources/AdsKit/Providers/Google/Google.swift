@@ -203,7 +203,7 @@ public final class Banner: UIView {
         }
         
         // swiftlint:disable:next force_unwrapping
-        Ads.Google.tracking(from: self.window!.rootViewController!)
+        Ads.Google.tracking(from: UIApplication.shared.delegate!.window!!.rootViewController!)
             .andThen(.deferred { [unowned self] in
                 self.adapter = .init(key: key, size: .anchored)
                 
