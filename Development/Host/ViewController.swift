@@ -23,7 +23,7 @@ final class ViewController: UIViewController {
     @IBAction func _rewardGad(_ sender: Any) {
         print(#function)
         
-        _ = Ads.Google.reward()
+        _ = Ads.Google.reward(self)
             .debug("Ads.Google.reward()")
             .subscribe()
     }
@@ -31,7 +31,7 @@ final class ViewController: UIViewController {
     @IBAction func _interstitialGad(_ sender: Any) {
         print(#function)
         
-        _ = Ads.Google.interstitial()
+        _ = Ads.Google.interstitial(self)
             .debug("Ads.Google.interstitial()")
             .subscribe()
     }

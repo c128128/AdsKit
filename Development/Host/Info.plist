@@ -23,7 +23,7 @@
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3940256099942544~1458002512</string>
 	<key>GADAutoload</key>
-	<true/>
+	<false/>
 	<key>GADInterstitial</key>
 	<string>ca-app-pub-3940256099942544/4411468910</string>
 	<key>GADReward</key>

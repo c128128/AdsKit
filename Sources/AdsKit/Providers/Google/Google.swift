@@ -118,29 +118,29 @@ public extension Ads {
             return Self._report
         }
         
-        public static func reward() -> Single<Ads.Reward.Result> {
+        public static func reward(_ root: UIViewController) -> Single<Ads.Reward.Result> {
             guard let reward = Self.shared.reward else {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.REWARD_KEY), with AdUnitID.")
             }
 
-            return Ads.Google.tracking()
+            return Ads.Google.tracking(from: root)
                 .andThen(.deferred {
-                    return reward.show()
+                    return reward.show(from: root)
                 })
         }
         
-        public static func interstitial() -> Completable {
+        public static func interstitial(_ root: UIViewController) -> Completable {
             guard let interstitial = Self.shared.interstitial else {
                 fatalError("Looks like you forget to set in Info.plist the \(Self.INTERSTITIAL_KEY), with AdUnitID.")
             }
 
-            return Ads.Google.tracking()
+            return Ads.Google.tracking(from: root)
                 .andThen(.deferred {
-                    return interstitial.show()
+                    return interstitial.show(from: root)
                 })
         }
         
-        internal static func tracking() -> Completable {
+        internal static func tracking(from controller: UIViewController) -> Completable {
             guard #available(iOS 14, *) else {
                 return .empty()
             }
@@ -162,22 +162,13 @@ public extension Ads {
                                     return completable(.error(error))
                                 }
                                 
-                                let window = Window.make()
-                                window.set(hidden: false)
-                                
-                                _ = window.rootViewController.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
-                                    .take(1)
-                                    .subscribe(onNext: { _ in
-                                        form?.present(from: window.rootViewController, completionHandler: { error in
-                                            window.set(hidden: true)
-                                            
-                                            if let error = error {
-                                                return completable(.error(error))
-                                            }
-                                            
-                                            return completable(.completed)
-                                        })
-                                    })
+                                form?.present(from: controller, completionHandler: { error in
+                                    if let error = error {
+                                        return completable(.error(error))
+                                    }
+                                    
+                                    return completable(.completed)
+                                })
                             }
 
                         default:
@@ -211,7 +202,8 @@ public final class Banner: UIView {
             return
         }
         
-        Ads.Google.tracking()
+        // swiftlint:disable:next force_unwrapping
+        Ads.Google.tracking(from: self.window!.rootViewController!)
             .andThen(.deferred { [unowned self] in
                 self.adapter = .init(key: key, size: .anchored)
                 

@@ -9,7 +9,7 @@ extension Ads.Google {
             return self._report
         }
         
-        private let _ad = ReplaySubject<Swift.Result<GADInterstitialAd?, Swift.Error>>.create(bufferSize: 1)
+        private var _ad: ReplaySubject<GADInterstitialAd>!
         private let key: String
         
         private var isShown = false
@@ -20,123 +20,89 @@ extension Ads.Google {
             self.preload()
         }
         
-        // swiftlint:disable:next function_body_length
-        func show() -> Completable {
+        func show(from controller: UIViewController) -> Completable {
+            #if DEBUG
+            guard controller.viewIfLoaded?.window != nil else {
+                fatalError("Looks like controller is hidden!")
+            }
+            #endif
+            
             guard !self.isShown else {
                 return .error("Interstitial is already shown.")
             }
             
-            let window = Window.make()
             let delegate = InterstitialDelegate()
             let key = self.key
             
             self.isShown = true
-            window.set(hidden: false)
             
-            return window.rootViewController.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
-                .take(1)
-                .flatMapLatest { _ in
-                    return self._ad
-                        .compactMap {
-                            switch $0 {
-                                case .failure(let error):
-                                    return .failure(error)
-                                
-                                case .success(let ad):
-                                    guard let ad = ad else {
-                                        return nil
-                                    }
-                                
-                                    return .success(ad)
-                            }
+            return self._ad
+                .flatMapLatest { [weak controller, weak self] ad -> Completable in
+                    ad.fullScreenContentDelegate = delegate
+                    
+                    return Completable.create { completable in
+                        guard let controller = controller, let self = `self` else {
+                            return Disposables.create()
                         }
-                        .take(1)
-                        .observe(on: MainScheduler.asyncInstance)
-                        .flatMap { (result: Swift.Result<GADInterstitialAd, Swift.Error>) -> Observable<Swift.Result<GADInterstitialAd, Swift.Error>> in
-                            self._ad.onNext(.success(nil))
-                            
-                            return Observable.just(result)
-                        }
-                }
-                .flatMapLatest { (result: Swift.Result<GADInterstitialAd, Swift.Error>) -> Observable<Never> in
-                    switch result {
-                        case .success(let ad):
-                            ad.fullScreenContentDelegate = delegate
                         
-                            return Completable.create { completable in
-                                let willDismissScreen = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adWillDismissFullScreenContent(_:)))
-                                    .take(1)
-                                    .subscribe(onNext: { _ in
-                                        window.set(hidden: true)
-                                    })
-                                
-                                let didDismissScreen = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidDismissFullScreenContent(_:)))
-                                    .take(1)
-                                    .subscribe(onNext: { _ in
-                                        // This is intentionally here, we keep a ref to ad, or it get deallocated
-                                        _ = ad
-                                        
-                                        return completable(.completed)
-                                    })
+                        let didDismissScreen = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidDismissFullScreenContent(_:)))
+                            .take(1)
+                            .subscribe(onNext: { _ in
+                                return completable(.completed)
+                            })
 
-                                let didFail = delegate.rx.methodInvoked(#selector(InterstitialDelegate.ad(_:didFailToPresentFullScreenContentWithError:)))
-                                    .take(1)
-                                    .subscribe(onNext: { any in
-                                        // This is intentionally here, we keep a ref to ad, or it get deallocated
-                                        _ = ad
-                                        
-                                        guard let error = any[1] as? Swift.Error else {
-                                            fatalError("Couldn't cast.")
-                                        }
-                                        
-                                        window.set(hidden: true)
+                        let didFail = delegate.rx.methodInvoked(#selector(InterstitialDelegate.ad(_:didFailToPresentFullScreenContentWithError:)))
+                            .take(1)
+                            .subscribe(onNext: { any in
+                                guard let error = any[1] as? Swift.Error else {
+                                    fatalError("Couldn't cast.")
+                                }
 
-                                        return completable(.error(error))
-                                    })
-                                
-                                let adDidRecordClick = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidRecordClick(_:)))
-                                    .map { _ in .click(key) }
-                                    .subscribe(self._report)
-                                
-                                let adDidRecordImpression = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidRecordImpression(_:)))
-                                    .map { _ in .impression(key) }
-                                    .subscribe(self._report)
-                                
-                                ad.present(fromRootViewController: window.rootViewController)
-                                
-                                return Disposables.create(
-                                    willDismissScreen,
-                                    didDismissScreen,
-                                    didFail,
-                                    adDidRecordClick,
-                                    adDidRecordImpression
-                                )
-                            }
-                            .asObservable()
+                                return completable(.error(error))
+                            })
                         
-                        case .failure(let error):
-                            return .error(error)
+                        let adDidRecordClick = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidRecordClick(_:)))
+                            .map { _ in .click(key) }
+                            .subscribe(self._report)
+                        
+                        let adDidRecordImpression = delegate.rx.methodInvoked(#selector(InterstitialDelegate.adDidRecordImpression(_:)))
+                            .map { _ in .impression(key) }
+                            .subscribe(self._report)
+                        
+                        ad.present(fromRootViewController: controller)
+                        
+                        return Disposables.create(
+                            didDismissScreen,
+                            didFail,
+                            adDidRecordClick,
+                            adDidRecordImpression
+                        )
                     }
                 }
                 .ignoreElements()
                 .asCompletable()
-                .do(onDispose: {
-                    self.isShown = false
-                    self.preload()
+                .do(onDispose: { [weak self] in
+                    self?.isShown = false
+                    self?.preload()
                 })
         }
         
         private func preload() {
-            GADInterstitialAd.load(withAdUnitID: self.key, request: .init()) { ad, error in
+            self._ad = .create(bufferSize: 1)
+            
+            GADInterstitialAd.load(withAdUnitID: self.key, request: .init()) { [weak self] ad, error in
                 if let error = error {
-                    return self._ad.onNext(.failure(error))
+                    self?._ad.onError(error)
+                    
+                    return
                 }
                 
                 guard let ad = ad else {
                     fatalError("Invalid state!")
                 }
                 
-                return self._ad.onNext(.success(ad))
+                self?._ad.onNext(ad)
+                self?._ad.onCompleted()
             }
         }
     }

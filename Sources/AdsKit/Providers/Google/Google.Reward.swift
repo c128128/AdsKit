@@ -9,7 +9,7 @@ extension Ads.Google {
             return self._report
         }
 
-        private let _ad = ReplaySubject<Swift.Result<GADRewardedAd?, Swift.Error>>.create(bufferSize: 1)
+        private var _ad: ReplaySubject<GADRewardedAd>!
         private let key: String
         
         private var isShown = false
@@ -21,129 +21,96 @@ extension Ads.Google {
         }
         
         // swiftlint:disable:next function_body_length
-        func show() -> Single<Ads.Reward.Result> {
+        func show(from controller: UIViewController) -> Single<Ads.Reward.Result> {
+            #if DEBUG
+            guard controller.viewIfLoaded?.window != nil else {
+                fatalError("Looks like controller is hidden!")
+            }
+            #endif
+
             guard !self.isShown else {
                 return .error("Interstitial is already shown.")
             }
-            
-            let window = Window.make()
+
             let delegate = RewardDelegate()
             let key = self.key
-            
+
             self.isShown = true
-            window.set(hidden: false)
             
-            return window.rootViewController.rx.methodInvoked(#selector(UIViewController.viewDidAppear(_:)))
-                .take(1)
-                .flatMapLatest { _ in
-                    return self._ad
-                        .compactMap {
-                            switch $0 {
-                                case .failure(let error):
-                                    return .failure(error)
-                                
-                                case .success(let ad):
-                                    guard let ad = ad else {
-                                        return nil
-                                    }
-                                
-                                    return .success(ad)
-                            }
+            return self._ad
+                .flatMapLatest { [weak controller, weak self] ad -> Single<Ads.Reward.Result> in
+                    ad.fullScreenContentDelegate = delegate
+                
+                    return Single<Ads.Reward.Result>.create { single in
+                        guard let controller = controller, let self = `self` else {
+                            return Disposables.create()
                         }
-                        .take(1)
-                        .observe(on: MainScheduler.asyncInstance)
-                        .flatMap { (result: Swift.Result<GADRewardedAd, Swift.Error>) -> Observable<Swift.Result<GADRewardedAd, Swift.Error>> in
-                            self._ad.onNext(.success(nil))
-                            
-                            return Observable.just(result)
-                        }
-                }
-                .flatMapLatest { (result: Swift.Result<GADRewardedAd, Swift.Error>) -> Observable<Ads.Reward.Result> in
-                    switch result {
-                        case .success(let ad):
-                            ad.fullScreenContentDelegate = delegate
                         
-                            return Single<Ads.Reward.Result>.create { single in
-                                var rewarded: _Reward?
-                                
-                                let willDismissScreen = delegate.rx.methodInvoked(#selector(RewardDelegate.adWillDismissFullScreenContent(_:)))
-                                    .take(1)
-                                    .subscribe(onNext: { _ in
-                                        window.set(hidden: true)
-                                    })
-                                
-                                let didDismissScreen = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidDismissFullScreenContent(_:)))
-                                    .take(1)
-                                    .subscribe(onNext: { _ in
-                                        // This is intentionally here, we keep a ref to ad, or it get deallocated
-                                        _ = ad
-                                        
-                                        if let rewarded = rewarded {
-                                            return single(.success(.rewarded(type: rewarded.type, amount: rewarded.amount)))
-                                        }
-
-                                        return single(.success(.canceled))
-                                    })
-
-                                let didFail = delegate.rx.methodInvoked(#selector(RewardDelegate.ad(_:didFailToPresentFullScreenContentWithError:)))
-                                    .take(1)
-                                    .subscribe(onNext: { any in
-                                        // This is intentionally here, we keep a ref to ad, or it get deallocated
-                                        _ = ad
-                                        
-                                        guard let error = any[1] as? Swift.Error else {
-                                            fatalError("Couldn't cast.")
-                                        }
-                                        
-                                        window.set(hidden: true)
-
-                                        return single(.failure(error))
-                                    })
-                                
-                                let adDidRecordClick = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidRecordClick(_:)))
-                                    .map { _ in .click(key) }
-                                    .subscribe(self._report)
-                                
-                                let adDidRecordImpression = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidRecordImpression(_:)))
-                                    .map { _ in .impression(key) }
-                                    .subscribe(self._report)
-                                
-                                ad.present(fromRootViewController: window.rootViewController) {
-                                    rewarded = .init(type: ad.adReward.type, amount: ad.adReward.amount.doubleValue)
+                        var rewarded: _Reward?
+                        
+                        let didDismissScreen = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidDismissFullScreenContent(_:)))
+                            .take(1)
+                            .subscribe(onNext: { _ in
+                                if let rewarded = rewarded {
+                                    return single(.success(.rewarded(type: rewarded.type, amount: rewarded.amount)))
                                 }
                                 
-                                return Disposables.create(
-                                    willDismissScreen,
-                                    didDismissScreen,
-                                    didFail,
-                                    adDidRecordClick,
-                                    adDidRecordImpression
-                                )
-                            }
-                            .asObservable()
+                                return single(.success(.canceled))
+                            })
                         
-                        case .failure(let error):
-                            return .error(error)
+                        let didFail = delegate.rx.methodInvoked(#selector(RewardDelegate.ad(_:didFailToPresentFullScreenContentWithError:)))
+                            .take(1)
+                            .subscribe(onNext: { any in
+                                guard let error = any[1] as? Swift.Error else {
+                                    fatalError("Couldn't cast.")
+                                }
+                                
+                                return single(.failure(error))
+                            })
+                        
+                        let adDidRecordClick = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidRecordClick(_:)))
+                            .map { _ in .click(key) }
+                            .subscribe(self._report)
+                        
+                        let adDidRecordImpression = delegate.rx.methodInvoked(#selector(RewardDelegate.adDidRecordImpression(_:)))
+                            .map { _ in .impression(key) }
+                            .subscribe(self._report)
+                        
+                        ad.present(fromRootViewController: controller) {
+                            rewarded = .init(type: ad.adReward.type, amount: ad.adReward.amount.doubleValue)
+                        }
+                        
+                        return Disposables.create(
+                            didDismissScreen,
+                            didFail,
+                            adDidRecordClick,
+                            adDidRecordImpression
+                        )
                     }
                 }
                 .asSingle()
-                .do(onDispose: {
-                    self.isShown = false
-                    self.preload()
+                .do(onDispose: { [weak self] in
+                    self?.isShown = false
+                    self?.preload()
                 })
         }
         
         private func preload() {
-            GADRewardedAd.load(withAdUnitID: self.key, request: .init()) { ad, error in
+            self._ad = .create(bufferSize: 1)
+            
+            GADRewardedAd.load(withAdUnitID: self.key, request: .init()) { [weak self] ad, error in
                 if let error = error {
-                    return self._ad.onNext(.failure(error))
+                    self?._ad.onError(error)
+                    
+                    return
                 }
                 
                 guard let ad = ad else {
                     fatalError("Invalid state!")
                 }
                 
-                return self._ad.onNext(.success(ad))
+                self?._ad.onNext(ad)
+                self?._ad.onCompleted()
             }
         }
     }
